@@ -282,7 +282,7 @@ test_set = {
     "Y": test_labels_int
 }
 
-print("Calculating mean and std for each channel in the train set starting.")
+print(dt.datetime.now(), "Calculating mean and std for each channel in the train set starting.")
 
 # define a function to calculate the mean and std for each channel of the images in the train set
 def get_dataset_stats(dataset_image_paths):
@@ -310,7 +310,7 @@ def get_dataset_stats(dataset_image_paths):
     return mean, std
 
 # do not calculate the statistics when training
-get_train_stats = False
+get_train_stats = True
 if get_train_stats:
     train_set_means, train_set_stds = get_dataset_stats(train_image_paths)
 
@@ -440,7 +440,7 @@ optimizer = torch.optim.AdamW(net.parameters(), lr = 0.001)
 scheduler = ExponentialLR(optimizer, gamma=0.9)
 
 # training loop
-nepochs = 100
+nepochs = 50
 PATH = "./garbage_net.pth" # save path for the best model
 
 best_loss = 1e+20
@@ -512,7 +512,7 @@ criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.AdamW(net.parameters(), lr = 1e-4)
 scheduler = ExponentialLR(optimizer, gamma=0.9)
 
-nepochs = 20
+nepochs = 10
 PATH = "./garbage_net.pth" # save path for the best model
 
 best_loss = 1e+20
@@ -615,6 +615,6 @@ print(f'{dt.datetime.now()} Accuracy of the network on the test images: {100 * c
 # Display and save confusion matrix
 cf_matrix = confusion_matrix(y_true, y_pred)
 df_cf_matrix = pd.DataFrame(cf_matrix, index = [i for i in classes], columns = [i for i in classes])
-sn.heatmap(df_cf_matrix, annot=True, fmt='d')
-plt.figure()
-plt.savefig('confusion_matrix.png', facecolor='white')
+cf_fig = sn.heatmap(df_cf_matrix, annot=True, fmt='d')
+cf_fig = cf_fig.get_figure()
+cf_fig.savefig("confusion_matrix.png", facecolor="white")
