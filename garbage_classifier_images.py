@@ -553,7 +553,7 @@ for epoch in range(nepochs):  # epoch loop
         
         # Save best model
         if val_loss < best_loss:
-            print(f"Saving model")
+            print(f"{dt.datetime.now()} Saving model")
             torch.save(net.state_dict(), PATH)
             best_loss = val_loss
         
@@ -574,6 +574,7 @@ print(f'{dt.datetime.now()} Loading the best model and evaluating it on the test
 # Load the best model to be used in the test set
 net = GarbageModel(4, (3, 224, 224), True)
 net.load_state_dict(torch.load(PATH))
+net.to(device)
 
 # 9. ANALYSE TEST RESULTS
 
@@ -588,7 +589,7 @@ y_pred = []
 # since we're not training, we don't need to calculate the gradients for our outputs
 with torch.no_grad():
     for data in test_loader:
-        images, labels = data
+        images, labels = data[0].to(device), data[1].to(device)
         y_true.extend(labels.data.cpu().numpy())
         # calculate outputs by running images through the network
         outputs = net(images)
@@ -600,12 +601,14 @@ with torch.no_grad():
         
         # Display some incorrect predictions
         if (predicted != labels).sum().item() > 0 and random.randint(0, 100) < 2:
-            incorrect_images = images[predicted != labels]
+            predicted = predicted.data.cpu().numpy()
+            labels = labels.data.cpu().numpy()
+            incorrect_images = images.data.cpu().numpy()[predicted != labels]
             incorrect_labels = labels[predicted != labels]
             incorrect_predicted = predicted[predicted != labels]
             
             plt.figure()
-            plt.imshow(incorrect_images[0].numpy().transpose(1, 2, 0))
+            plt.imshow(incorrect_images[0].transpose(1, 2, 0))
             plt.title(f"Label: {classes[incorrect_labels[0]]}, Predicted: {classes[incorrect_predicted[0]]}")            
             plt.savefig(f"incorrect_{figure_name_count}", facecolor='white')
             figure_name_count += 1
@@ -616,5 +619,6 @@ print(f'{dt.datetime.now()} Accuracy of the network on the test images: {100 * c
 cf_matrix = confusion_matrix(y_true, y_pred)
 df_cf_matrix = pd.DataFrame(cf_matrix, index = [i for i in classes], columns = [i for i in classes])
 cf_fig = sn.heatmap(df_cf_matrix, annot=True, fmt='d')
+plt.title("Confusion Matrix")
 cf_fig = cf_fig.get_figure()
 cf_fig.savefig("confusion_matrix.png", facecolor="white")
